@@ -1,6 +1,7 @@
 package com.SpringBot.service;
 
 import com.SpringBot.config.BotConfig;
+import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -14,11 +15,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.awt.SystemColor.text;
+
 @Component
 @Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
     private final UserService userService;
-
+    private final TelegramBotService botService;
     private final BotConfig botConfig;
 
     static final String HELP_TEXT = "This bot is created to demonstrate Spring capabilities.\n\n" +
@@ -27,15 +30,13 @@ public class TelegramBot extends TelegramLongPollingBot {
             "Type /myData to see data stored about yourself\n\n" +
             "Type /help to see this message again";
 
-    public TelegramBot(UserService userService, BotConfig botConfig) {
+    public TelegramBot(UserService userService, TelegramBotService botService, BotConfig botConfig) {
         this.userService = userService;
+        this.botService = botService;
         this.botConfig = botConfig;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
-        listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
-        listOfCommands.add(new BotCommand("/deletedata", "delete my data"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
-        listOfCommands.add(new BotCommand("/settings", "set your preferences"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -67,10 +68,14 @@ public class TelegramBot extends TelegramLongPollingBot {
                     break;
 
                 case "/help":
-
                     sendMessage(chatId, HELP_TEXT);
                     break;
-
+                case "Посмотреть подборки":
+                    sendMessage(chatId, "Вы выбрали посмотреть подборки");
+                    break;
+                case "Случайный фильм/сериал по жанрам " + "\uD83D\uDD6E":
+                    sendMessage(chatId, "Вы выбрали посмотреть жанры");
+                    break;
                 default:
                     sendMessage(chatId, "Sorry, command was not recognized");
                     log.info("command was not recognized");
@@ -79,7 +84,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void startCommandReceived(long chatId, String name) {
-        String answer = "Hi, " + name + ", nice to meet you!";
+        String answer = EmojiParser.parseToUnicode("Привет, " + name + "! В этом боте ты сможешь найти фильм или сериал на вечер." +
+                " Выбирай внизу категорию, подходящую тебе, и наслаждайся просмотром!" + ":blush:" + ":popcorn:");
         log.info("Replied to user " + name);
         sendMessage(chatId, answer);
     }
@@ -88,13 +94,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
-
+        botService.keyboard(message);
         try {
             execute(message);
         } catch (TelegramApiException e) {
             log.error("Error occurred: " + e.getMessage());
-
         }
     }
+
 
 }

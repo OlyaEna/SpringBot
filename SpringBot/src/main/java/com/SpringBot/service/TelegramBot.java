@@ -101,7 +101,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         String answer = product.getType().getName() + " называется \"" + product.getTitle() + "\"" + "\n\n"
                 + "Описание: " + product.getDescription() + "\n\n"
                 + "Оценка: " + product.getRating() + "\n\n"
-                + "Жанр: " + product.getGenres().equals(product);
+                + "Жанр: " + product.getGenres() + "\n\n"
+                + product.getUrl() + "\n\n";
         sendMessage(chatId, answer);
     }
 
@@ -124,8 +125,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Error occurred: " + e.getMessage());
         }
     }
-
-
 
 
 }

@@ -20,7 +20,7 @@ public class TelegramBotServiceImpl implements TelegramBotService {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
 
         KeyboardRow keyboardRow = new KeyboardRow();
-        KeyboardButton keyboardButton=new KeyboardButton();
+        KeyboardButton keyboardButton = new KeyboardButton();
         keyboardButton.setText("Случайный фильм " + "\uD83C\uDF9E");
         keyboardRow.add(keyboardButton);
         keyboardRow.add("Случайный сериал " + "\uD83C\uDFAC");
@@ -31,7 +31,7 @@ public class TelegramBotServiceImpl implements TelegramBotService {
         keyboardRows.add(keyboardRow);
 
         keyboardRow = new KeyboardRow();
-        keyboardRow.add("Посмотреть подборки");
+        keyboardRow.add("Посмотреть подборки" + "\uD83D\uDCFD");
         keyboardRows.add(keyboardRow);
 
         keyboardMarkup.setKeyboard(keyboardRows);

@@ -9,8 +9,8 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "types")
-public class Type {
+@Table(name = "selections")
+public class Selection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

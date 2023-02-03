@@ -25,7 +25,8 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.exampleSeries();
         ProductDto productDto = new ProductDto();
         mapper(product, productDto);
-        return productDto;    }
+        return productDto;
+    }
 
     private void mapper(Product product, ProductDto productDto) {
         productDto.setId(product.getId());
@@ -35,6 +36,7 @@ public class ProductServiceImpl implements ProductService {
         productDto.setGenres(product.getGenres());
         productDto.setRating(product.getRating());
         productDto.setUrl(product.getUrl());
+        productDto.setYear(product.getYear());
     }
 
 }

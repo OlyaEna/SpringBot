@@ -1,10 +1,10 @@
 package com.SpringBot.model.repository;
 
-import com.SpringBot.model.entity.Type;
+import com.SpringBot.model.entity.Selection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-
 @Repository
-public interface TypeRepository extends JpaRepository<Type, Long> {
+public interface SelectionRepository extends JpaRepository<Selection, Long> {
+
 }

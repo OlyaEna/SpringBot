@@ -1,15 +1,14 @@
 package com.SpringBot.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.io.File;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "products")
@@ -18,6 +17,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
+    private String year;
     @Lob
     @Column(columnDefinition = "MEDIUMBLOB")
     private String image;
@@ -25,6 +25,9 @@ public class Product {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "type_id")
     private Type type;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "selection_id")
+    private Selection selection;
     private String description;
     private String rating;
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

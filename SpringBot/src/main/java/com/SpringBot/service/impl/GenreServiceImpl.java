@@ -10,9 +10,4 @@ import org.springframework.stereotype.Service;
 public class GenreServiceImpl implements GenreService {
     private final GenreRepository genreRepository;
 
-//    @Override
-//    public String genresNames(ProductDto productDto) {
-//        List<String> genres = genreRepository.findGenresNameByProduct(productDto);
-//        return genres.toString();
-//    }
 }

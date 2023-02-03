@@ -2,7 +2,9 @@ package com.SpringBot.service;
 
 import com.SpringBot.config.BotConfig;;
 import com.SpringBot.DTO.ProductDto;
+import com.SpringBot.model.entity.Selection;
 import com.SpringBot.model.repository.GenreRepository;
+import com.SpringBot.model.repository.SelectionRepository;
 import com.SpringBot.model.repository.TypeRepository;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
@@ -24,14 +28,17 @@ import static com.SpringBot.constant.VarConstant.*;
 @Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
     private final UserService userService;
+    static final String YES_BUTTON = "YES_BUTTON";
+    static final String NO_BUTTON = "NO_BUTTON";
     private final TelegramBotService botService;
     private final BotConfig botConfig;
     private final ProductService productService;
     private final GenreRepository genreRepository;
     private final TypeRepository typeRepository;
     private final GenreService genreService;
+    private final SelectionRepository selectionRepository;
 
-    public TelegramBot(UserService userService, TelegramBotService botService, BotConfig botConfig, ProductService productService, GenreRepository genreRepository, TypeRepository typeRepository, GenreService genreService) {
+    public TelegramBot(UserService userService, TelegramBotService botService, BotConfig botConfig, ProductService productService, GenreRepository genreRepository, TypeRepository typeRepository, GenreService genreService, SelectionRepository selectionRepository) {
         this.userService = userService;
         this.botService = botService;
         this.botConfig = botConfig;
@@ -39,6 +46,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.genreRepository = genreRepository;
         this.typeRepository = typeRepository;
         this.genreService = genreService;
+        this.selectionRepository = selectionRepository;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
@@ -76,10 +84,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendMessage(chatId, HELP_TEXT);
                     break;
                 case SELECTION:
-                    sendMessage(chatId, typeRepository.findAllTypes().toString());
+                    showAllSelections(chatId);
                     break;
                 case GENRES:
-                    sendMessage(chatId, genreRepository.findAllGenres().toString());
                     log.info("command genres");
                     break;
                 case MOVIE:
@@ -98,14 +105,14 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void showFilm(long chatId, ProductDto product) {
-        String answer = product.getType().getName() + " называется \"" + product.getTitle() + "\"" + "\n\n"
+        String answer = "\uD83D\uDCFD " + product.getType().getName() + " \"" + product.getTitle() + "\" " + "(" + product.getYear() + ")" + "\n\n"
+                + "📜" + "Жанр: " + genreRepository.findGenresNamesById(genreRepository.findGenresNames(product.getId()))
+                .toString().replaceAll("^\\[|\\]$", "") + "\n\n"
+                + "\uD83C\uDFC6 " + "Оценка: " + product.getRating() + "\n\n"
                 + "Описание: " + product.getDescription() + "\n\n"
-                + "Оценка: " + product.getRating() + "\n\n"
-                + "Жанр: " + product.getGenres() + "\n\n"
-                + product.getUrl() + "\n\n";
+                + product.getUrl();
         sendMessage(chatId, answer);
     }
-
 
     private void startCommandReceived(long chatId, String name) {
         String answer = EmojiParser.parseToUnicode("Привет, " + name + "! В этом боте ты сможешь найти фильм или сериал на вечер." +
@@ -119,10 +126,49 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
         botService.keyboard(message);
+        executeMessage(message);
+    }
+
+    private void showAllSelections(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Все жанры");
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+
+        for (Selection selection : selectionRepository.findAll()) {
+            var noButton = new InlineKeyboardButton();
+            noButton.setText(selection.getName());
+            noButton.setCallbackData(NO_BUTTON);
+            rowInLine.add(noButton);
+        }
+        for (int i = 0; i < 2; i++) {
+            rowsInLine.add(rowInLine);
+        }
+        markupInLine.setKeyboard(rowsInLine);
+        message.setReplyMarkup(markupInLine);
+
+//        yesButton.setCallbackData(YES_BUTTON);
+//
+//
+//
+//        rowInLine.add(yesButton);
+//
+//        rowsInLine.add(rowInLine);
+//
+
+//
+        executeMessage(message);
+
+    }
+
+    private void executeMessage(SendMessage message) {
         try {
             execute(message);
         } catch (TelegramApiException e) {
-            log.error("Error occurred: " + e.getMessage());
+            log.error(e.getMessage());
         }
     }
 

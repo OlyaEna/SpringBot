@@ -15,6 +15,7 @@ import java.util.List;
 public class ProductDto {
     private Long id;
     private String title;
+    private String year;
     private String url;
     private Type type;
     private String description;

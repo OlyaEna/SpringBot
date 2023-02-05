@@ -1,6 +1,7 @@
 package com.SpringBot.DTO;
 
 import com.SpringBot.model.entity.Genre;
+import com.SpringBot.model.entity.Selection;
 import com.SpringBot.model.entity.Type;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,4 +22,5 @@ public class ProductDto {
     private String description;
     private String rating;
     private List<Genre> genres;
+    private Selection selection;
 }

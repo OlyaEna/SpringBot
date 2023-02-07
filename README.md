@@ -7,6 +7,7 @@ Telegram Bot
 ![image](https://github.com/OlyaEna/SpringBot/blob/master/SpringBot/src/main/resources/static/img/startMessage.JPG)
 
 - Кнопки
+
 ![image](https://github.com/OlyaEna/SpringBot/blob/master/SpringBot/src/main/resources/static/img/buttons.JPG)
 
 - Случайный фильм и сериал
@@ -20,6 +21,7 @@ Telegram Bot
 ![image](https://github.com/OlyaEna/SpringBot/blob/master/SpringBot/src/main/resources/static/img/genres3.JPG)
 
 - Подборки
+
 ![image](https://github.com/OlyaEna/SpringBot/blob/master/SpringBot/src/main/resources/static/img/selections.JPG)
 ![image](https://github.com/OlyaEna/SpringBot/blob/master/SpringBot/src/main/resources/static/img/selections1.JPG)
 ![image](https://github.com/OlyaEna/SpringBot/blob/master/SpringBot/src/main/resources/static/img/selections2.JPG)

@@ -2,7 +2,6 @@ package com.SpringBot.service.impl;
 
 import com.SpringBot.model.entity.Product;
 import com.SpringBot.DTO.ProductDto;
-import com.SpringBot.model.entity.Selection;
 import com.SpringBot.model.repository.ProductRepository;
 import com.SpringBot.service.ProductService;
 import lombok.AllArgsConstructor;
@@ -34,9 +33,23 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> findProductsBySelection(Long id) {
-        List <Product> products = productRepository.findProductsBySelection(id);
-        List <ProductDto> productDtoList = transfer(products);
-        return  productDtoList;
+        List<Product> products = productRepository.findProductsBySelection(id);
+        List<ProductDto> productDtoList = transfer(products);
+        return productDtoList;
+    }
+
+    @Override
+    public List<ProductDto> findAll() {
+        List<Product> products = productRepository.findAll();
+        List<ProductDto> productDtoList = transfer(products);
+        return productDtoList;
+    }
+
+    @Override
+    public List<ProductDto> findProductsByGenre(Long id) {
+        List<Product> products = productRepository.findProductsById(productRepository.findProductsByGenre(id));
+        List<ProductDto> productDtoList = transfer(products);
+        return productDtoList;
     }
 
     private void mapper(Product product, ProductDto productDto) {
@@ -47,6 +60,7 @@ public class ProductServiceImpl implements ProductService {
         productDto.setGenres(product.getGenres());
         productDto.setRating(product.getRating());
         productDto.setUrl(product.getUrl());
+        productDto.setHdUrl(product.getHdUrl());
         productDto.setYear(product.getYear());
         productDto.setSelection(product.getSelection());
     }

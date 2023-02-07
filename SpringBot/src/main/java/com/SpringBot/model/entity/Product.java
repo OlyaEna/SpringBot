@@ -22,6 +22,7 @@ public class Product {
     @Column(columnDefinition = "MEDIUMBLOB")
     private String image;
     private String url;
+    private String hdUrl;
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "type_id")
     private Type type;

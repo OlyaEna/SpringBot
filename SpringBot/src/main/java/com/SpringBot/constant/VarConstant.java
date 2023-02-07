@@ -12,5 +12,6 @@ public class VarConstant {
             "Type /help to see this message again";
     public static final String MOVIE = "Случайный фильм " + "\uD83C\uDF9E";
     public static final String SERIES = "Случайный сериал " + "\uD83C\uDFAC";
+
     public static final String BUTTON_SELECTION="BUTTON_SELECTION";
 }

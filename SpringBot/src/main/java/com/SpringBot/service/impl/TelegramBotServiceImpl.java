@@ -36,8 +36,6 @@ public class TelegramBotServiceImpl implements TelegramBotService {
 
         keyboardMarkup.setKeyboard(keyboardRows);
         message.setReplyMarkup(keyboardMarkup);
-
-
     }
 
 }

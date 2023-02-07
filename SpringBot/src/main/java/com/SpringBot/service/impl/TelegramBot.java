@@ -1,14 +1,11 @@
-package com.SpringBot.service;
+package com.SpringBot.service.impl;
 
+import com.SpringBot.DTO.GenreDto;
+import com.SpringBot.DTO.SelectionDto;
 import com.SpringBot.config.BotConfig;;
 import com.SpringBot.DTO.ProductDto;
-import com.SpringBot.model.entity.Genre;
-import com.SpringBot.model.entity.Product;
-import com.SpringBot.model.entity.Selection;
 import com.SpringBot.model.repository.GenreRepository;
-import com.SpringBot.model.repository.ProductRepository;
-import com.SpringBot.model.repository.SelectionRepository;
-import com.SpringBot.model.repository.TypeRepository;
+import com.SpringBot.service.*;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,26 +32,24 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final TelegramBotService botService;
     private final BotConfig botConfig;
     private final ProductService productService;
-    private final GenreRepository genreRepository;
-    private final TypeRepository typeRepository;
     private final GenreService genreService;
-    private final SelectionRepository selectionRepository;
-    private final ProductRepository productRepository;
+    private final GenreRepository genreRepository;
+    private final SelectionService selectionService;
 
 
-    public TelegramBot(UserService userService, TelegramBotService botService, BotConfig botConfig, ProductService productService, GenreRepository genreRepository, TypeRepository typeRepository, GenreService genreService, SelectionRepository selectionRepository, ProductRepository productRepository) {
+    public TelegramBot(UserService userService, TelegramBotService botService, BotConfig botConfig,
+                       ProductService productService, GenreService genreService, GenreRepository genreRepository,
+                       SelectionService selectionService) {
         this.userService = userService;
         this.botService = botService;
         this.botConfig = botConfig;
         this.productService = productService;
-        this.genreRepository = genreRepository;
-        this.typeRepository = typeRepository;
         this.genreService = genreService;
-        this.selectionRepository = selectionRepository;
-        this.productRepository = productRepository;
+        this.genreRepository = genreRepository;
+        this.selectionService = selectionService;
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "get a welcome message"));
-        listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand("/start", "Получить приветственное сообщение"));
+        listOfCommands.add(new BotCommand("/help", "Информация о том, как пользоваться ботом"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -90,6 +85,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     break;
                 case SELECTION:
                     showAllSelections(chatId);
+                    log.info("command selections");
                     break;
                 case GENRES:
                     showAllGenres(chatId);
@@ -111,21 +107,55 @@ public class TelegramBot extends TelegramLongPollingBot {
             String callbackData = update.getCallbackQuery().getData();
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
-            executeEditMessageText(callbackData, chatId, messageId);
-//            if (callbackData.equals(BUTTON_SELECTION)){
-//                showFilmsBySelections(chatId);
-//            }
+
+            for (SelectionDto selection : selectionService.findAll()) {
+                if (callbackData.equals(selection.getName())) {
+                    showFilmsBySelections(chatId, Long.valueOf(selection.getId()));
+                    executeEditMessageText("Вы выбрали подборку \"" + callbackData + "\"", chatId, messageId);
+                }
+            }
+
+            for (ProductDto product : productService.findAll()) {
+                if (callbackData.equals(product.getTitle())) {
+                    showFilm(chatId, product);
+                    executeEditMessageText("Вы выбрали " + product.getType().getName() + " \"" + callbackData
+                            + "\"", chatId, messageId);
+                }
+            }
+
+            for (GenreDto genre : genreService.findAll()) {
+                if (callbackData.equals(genre.getName())) {
+                    showFilmsByGenres(chatId, Long.valueOf(genre.getId()));
+                    executeEditMessageText("Вы выбрали жанр \"" + callbackData + "\"", chatId, messageId);
+                }
+            }
         }
+
     }
 
     private void showFilm(long chatId, ProductDto product) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+
         String answer = "\uD83D\uDCFD " + product.getType().getName() + " \"" + product.getTitle() + "\" " + "(" + product.getYear() + ")" + "\n\n"
                 + "📜" + "Жанр: " + genreRepository.findGenresNamesById(genreRepository.findGenresNames(product.getId()))
                 .toString().replaceAll("^\\[|\\]$", "") + "\n\n"
                 + "\uD83C\uDFC6 " + "Оценка: " + product.getRating() + "\n\n"
                 + "Описание: " + product.getDescription() + "\n\n"
                 + product.getUrl();
-        sendMessage(chatId, answer);
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+        var button = new InlineKeyboardButton();
+        button.setText("👀" + "Смотреть");
+        button.setUrl(product.getHdUrl());
+        rowInLine.add(button);
+        rowsInLine.add(rowInLine);
+        markupInLine.setKeyboard(rowsInLine);
+        message.setReplyMarkup(markupInLine);
+        message.setText(answer);
+        executeMessage(message);
     }
 
     private void startCommandReceived(long chatId, String name) {
@@ -151,11 +181,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
 
-        for (Selection selection : selectionRepository.findAll()) {
+        for (SelectionDto selection : selectionService.findAll()) {
             List<InlineKeyboardButton> rowInLine = new ArrayList<>();
             var button = new InlineKeyboardButton();
             button.setText(selection.getName());
-            button.setCallbackData(BUTTON_SELECTION);
+            button.setCallbackData(selection.getName());
             rowInLine.add(button);
             rowsInLine.add(rowInLine);
         }
@@ -164,6 +194,27 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setReplyMarkup(markupInLine);
         executeMessage(message);
 
+    }
+
+    private <T> void genericMethod(long chatId, String text, List<T> lists) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(text);
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+
+        for (T c : lists) {
+            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+            var noButton = new InlineKeyboardButton();
+            noButton.setText(String.valueOf(c));
+            noButton.setCallbackData(String.valueOf(c));
+            rowInLine.add(noButton);
+            rowsInLine.add(rowInLine);
+        }
+        markupInLine.setKeyboard(rowsInLine);
+        message.setReplyMarkup(markupInLine);
+        executeMessage(message);
     }
 
 
@@ -175,7 +226,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
 
-        for (Genre genre : genreRepository.findAll()) {
+        for (GenreDto genre : genreService.findAll()) {
             List<InlineKeyboardButton> rowInLine = new ArrayList<>();
             var noButton = new InlineKeyboardButton();
             noButton.setText(genre.getName());
@@ -187,7 +238,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         markupInLine.setKeyboard(rowsInLine);
         message.setReplyMarkup(markupInLine);
         executeMessage(message);
-
     }
 
     private void executeMessage(SendMessage message) {
@@ -223,7 +273,31 @@ public class TelegramBot extends TelegramLongPollingBot {
             List<InlineKeyboardButton> rowInLine = new ArrayList<>();
             var noButton = new InlineKeyboardButton();
             noButton.setText(product.getTitle());
-            noButton.setCallbackData(product.getDescription());
+            noButton.setCallbackData(product.getTitle());
+            rowInLine.add(noButton);
+            rowsInLine.add(rowInLine);
+        }
+
+        markupInLine.setKeyboard(rowsInLine);
+        message.setReplyMarkup(markupInLine);
+        executeMessage(message);
+
+    }
+
+
+    private void showFilmsByGenres(long chatId, Long genreId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("\uD83D\uDCFD" + "Выберите фильм:");
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+
+        for (ProductDto product : productService.findProductsByGenre(genreId)) {
+            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+            var noButton = new InlineKeyboardButton();
+            noButton.setText(product.getTitle());
+            noButton.setCallbackData(product.getTitle());
             rowInLine.add(noButton);
             rowsInLine.add(rowInLine);
         }

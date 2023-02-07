@@ -18,6 +18,7 @@ public class ProductDto {
     private String title;
     private String year;
     private String url;
+    private String hdUrl;
     private Type type;
     private String description;
     private String rating;
